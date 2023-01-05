@@ -19,6 +19,10 @@ public class InventoryServiceApplication {
 
 	@Bean
 	public CommandLineRunner loadRawData(InventoryRepository inventoryRepository){
+		List<Inventory> rows = inventoryRepository.findAll();
+		if(!rows.isEmpty()){
+			return null;
+		}
 		List<Inventory> data = List.of(
 				new Inventory("iphone_11",100),
 				new Inventory("iphone_12",10),
