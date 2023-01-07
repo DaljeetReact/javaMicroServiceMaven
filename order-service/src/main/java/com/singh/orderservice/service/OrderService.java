@@ -24,7 +24,7 @@ public class OrderService {
     private OrderRepository orderRepository;
 
      @Autowired
-     private WebClient webClient;
+     private WebClient.Builder webClientBuilder;
 
      @Value("${uri.Invetory}")
     private String inventoryURL;
@@ -39,6 +39,7 @@ public class OrderService {
         List<OrderLineItems> orderLineItems = orderRequest.getOrderLineItemsDtoList()
                         .stream()
                         .map(orderLineItemsDto -> mapToDto(orderLineItemsDto)).toList();
+
         order.setOrderLineItems(orderLineItems);
 
 
@@ -48,7 +49,7 @@ public class OrderService {
 
         ///_________________________________________________________________________
         // CAll the inventory Service to check is product is available for order or not
-        InventoryResponse[] InventoryResponseArray = webClient.get()
+        InventoryResponse[] InventoryResponseArray = webClientBuilder.build().get()
              .uri(inventoryURL, uriBuilder -> uriBuilder.queryParam("skuCode", skuCodes).build())
              .retrieve()
              .bodyToMono(InventoryResponse[].class)
@@ -56,7 +57,6 @@ public class OrderService {
         ///_________________________________________________________________________
 
        Boolean AllProductsInStock = Arrays.stream(InventoryResponseArray).allMatch(InventoryResponse::getInStock);
-
      if(AllProductsInStock && InventoryResponseArray.length > 0){
          orderRepository.save(order); // place order for list of products
      }else{
@@ -72,5 +72,9 @@ public class OrderService {
         orderLineItems.setQuantity(orderLineItemsDto.getQuantity());
         orderLineItems.setSkuCode(orderLineItemsDto.getSkuCode());
         return  orderLineItems;
+    }
+
+    public List<Order> GetAllOrders() {
+       return orderRepository.findAll();
     }
 }
